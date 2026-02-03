@@ -1,9 +1,4 @@
 local neorg = require("neorg.core")
-local ts_utils
-
-if not vim.treesitter.get_node then
-  ts_utils = require("nvim-treesitter.ts_utils")
-end
 
 local winnr = nil
 local bufnr = nil
@@ -33,45 +28,45 @@ module.private = {
       ["heading6"] = "@neorg.headings.6.title",
     }
 
-    local node
+    local cursor_row = vim.api.nvim_win_get_cursor(0)[1] - 1 -- 0-indexed
+    local topline = vim.fn.line("w0") - 1                    -- 0-indexed
 
-    -- TODO: remove after 0.10 release
-    if not vim.treesitter.get_node then
-      node = ts_utils.get_node_at_cursor(0, true)
-    else
-      node = vim.treesitter.get_node()
+    local ok, parser = pcall(vim.treesitter.get_parser, 0, "norg")
+    if not ok or not parser then
+      return {}, {}
     end
 
+    local trees = parser:trees()
+    if not trees or #trees == 0 then
+      return {}, {}
+    end
+
+    local root = trees[1]:root()
     local heading_nodes = {}
 
-    local function is_valid(potential_node)
-      local topline = vim.fn.line("w0")
-      local row = potential_node:start()
-      return row <= (topline + #heading_nodes)
-    end
-
-    local function validate_heading_nodes()
-      local valid_heading_nodes = heading_nodes
-      for i = #heading_nodes, 1, -1 do
-        if not is_valid(valid_heading_nodes[i]) then
-          table.remove(valid_heading_nodes, i)
+    local function collect_headings(node)
+      for child in node:iter_children() do
+        local child_type = child:type()
+        local start_row = child:start()
+        local end_row = child:end_()
+        if start_row <= cursor_row and end_row >= cursor_row then
+          if highlight_table[child_type] then
+            table.insert(heading_nodes, child)
+          end
+          collect_headings(child)
         end
       end
-      return valid_heading_nodes
     end
+    collect_headings(root)
 
-    while node do
-      if node:type():find("heading") and is_valid(node) then
-        table.insert(heading_nodes, node)
-      end
-      if node:parent() then
-        node = node:parent()
-      else
-        break
+    -- Keep only headings scrolled above the viewport
+    local filtered = {}
+    for _, heading_node in ipairs(heading_nodes) do
+      if heading_node:start() < topline then
+        table.insert(filtered, heading_node)
       end
     end
-
-    heading_nodes = validate_heading_nodes()
+    heading_nodes = filtered
 
     local function get_title(heading_node)
       local title_node = heading_node:field("title")[1]
