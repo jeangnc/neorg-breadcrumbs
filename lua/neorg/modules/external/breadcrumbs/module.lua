@@ -82,7 +82,7 @@ module.private = {
     local segments = {}
     local highlights = {}
 
-    for i = #heading_nodes, 1, -1 do
+    for i = 1, #heading_nodes do
       local heading_node = heading_nodes[i]
       local title = get_title(heading_node)
       if title and title ~= "" then
