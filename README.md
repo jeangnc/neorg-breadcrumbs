@@ -1,4 +1,4 @@
-# neorg-contexts
+# neorg-breadcrumbs
 
 A small Neorg external module that shows the current heading context as a single line.
 

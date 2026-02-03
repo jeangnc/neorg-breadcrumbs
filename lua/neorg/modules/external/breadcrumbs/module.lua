@@ -7,11 +7,11 @@ end
 
 local winnr = nil
 local bufnr = nil
-local ns = vim.api.nvim_create_namespace("neorg-contexts")
+local ns = vim.api.nvim_create_namespace("neorg-breadcrumbs")
 
 vim.cmd([[highlight default link NeorgContext Visual]])
 
-local module = neorg.modules.create("external.context")
+local module = neorg.modules.create("external.breadcrumbs")
 
 module.setup = function()
   return {
@@ -199,7 +199,7 @@ module.private = {
 }
 
 module.load = function()
-  local context_augroup = vim.api.nvim_create_augroup("neorg-contexts", {})
+  local context_augroup = vim.api.nvim_create_augroup("neorg-breadcrumbs", {})
 
   vim.api.nvim_create_autocmd({ "WinScrolled", "BufEnter", "WinEnter", "CursorMoved" }, {
     callback = function()
