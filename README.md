@@ -23,12 +23,6 @@ require("neorg").setup({
 })
 ```
 
-## Commands
-
-- `:Neorg context toggle`
-- `:Neorg context enable`
-- `:Neorg context disable`
-
 ## Notes
 
 - Only renders in `norg` buffers.

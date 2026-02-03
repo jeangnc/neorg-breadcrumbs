@@ -17,31 +17,12 @@ module.setup = function()
   return {
     success = true,
     requires = {
-      "core.neorgcmd",
       "core.concealer",
     },
   }
 end
 
 module.private = {
-  enabled = true,
-
-  toggle = function()
-    if module.private.enabled == true then
-      module.private.enabled = false
-    else
-      module.private.enabled = true
-    end
-  end,
-
-  enable = function()
-    module.private.enabled = true
-  end,
-
-  disable = function()
-    module.private.enabled = false
-  end,
-
   get_contexts = function()
     local highlight_table = {
       ["heading1"] = "@neorg.headings.1.title",
@@ -197,14 +178,6 @@ module.private = {
   end,
 
   update_window = function()
-    if not module.private.enabled then
-      if winnr and vim.api.nvim_win_is_valid(winnr) then
-        vim.api.nvim_win_close(winnr, true)
-        winnr = nil
-      end
-      return
-    end
-
     if vim.bo.filetype ~= "norg" then
       if winnr and vim.api.nvim_win_is_valid(winnr) then
         vim.api.nvim_win_close(winnr, true)
@@ -229,18 +202,6 @@ module.config.public = {}
 module.public = {}
 
 module.load = function()
-  module.required["core.neorgcmd"].add_commands_from_table({
-    context = {
-      min_args = 1,
-      max_args = 1,
-      subcommands = {
-        toggle = { args = 0, name = "context.toggle" },
-        enable = { args = 0, name = "context.enable" },
-        disable = { args = 0, name = "context.disable" },
-      },
-    },
-  })
-
   local context_augroup = vim.api.nvim_create_augroup("neorg-contexts", {})
 
   vim.api.nvim_create_autocmd({ "WinScrolled", "BufEnter", "WinEnter", "CursorMoved" }, {
@@ -250,25 +211,5 @@ module.load = function()
     group = context_augroup,
   })
 end
-
-module.on_event = function(event)
-  if vim.tbl_contains({ "core.keybinds", "core.neorgcmd" }, event.split_type[1]) then
-    if event.split_type[2] == "context.toggle" then
-      module.private.toggle()
-    elseif event.split_type[2] == "context.enable" then
-      module.private.enable()
-    elseif event.split_type[2] == "context.disable" then
-      module.private.disable()
-    end
-  end
-end
-
-module.events.subscribed = {
-  ["core.neorgcmd"] = {
-    ["context.toggle"] = true,
-    ["context.enable"] = true,
-    ["context.disable"] = true,
-  },
-}
 
 return module
